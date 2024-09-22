@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #purchaseList, #tipsList {
+            list-style: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Carbon Footprint Tracker</h1>
+        <form id="purchaseForm">
+            <div class="input-group">
+                <label for="category">Category:</label>
+                <select id="category" required>
+                    <option value="">Select...</option>
+                    <option value="fuel">Fuel</option>
+                    <option value="groceries">Groceries</option>
+                    <option value="flights">Flights</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="public_transport">Public Transport</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="amount">Amount:</label>
+                <input type="number" id="amount" step="0.01" required>
+            </div>
+            <button type="submit">Add Purchase</button>
+        </form>
+
+        <h2>Your Purchases</h2>
+        <ul id="purchaseList"></ul>
+
+        <button id="calculateBtn">Calculate CO2 Footprint</button>
+
+        <div id="results" class="hidden">
+            <h2>Results</h2>
+            <p id="totalCO2"></p>
+            <h3>Sustainability Tips:</h3>
+            <ul id="tipsList"></ul>
+            <div>
+                <label for="targetCO2">Enter your target CO2 emissions (kg):</label>
+                <input type="number" id="targetCO2" step="0.01">
+                <button id="trackBtn">Track Progress</button>
+            </div>
+            <p id="progressMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        const CO2_LIMITS = {
+            fuel: 2.31,
+            groceries: 0.45,
+            flights: 115.0,
+            electronics: 100.0,
+            public_transport: 0.1
+        };
+
+        let purchases = [];
+
+        document.getElementById('purchaseForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            
+            purchases.push({ category, amount });
+            updatePurchaseList();
+            document.getElementById('purchaseForm').reset();
+        });
+
+        function updatePurchaseList() {
+            const list = document.getElementById('purchaseList');
+            list.innerHTML = '';
+            purchases.forEach((purchase) => {
+                const li = document.createElement('li');
+                li.textContent = `${purchase.amount} (${purchase.category})`;
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('calculateBtn').addEventListener('click', function () {
+            const totalCO2 = calculateCarbonFootprint();
+            displayResults(totalCO2);
+        });
+
+        function calculateCarbonFootprint() {
+            return purchases.reduce((total, purchase) => {
+                return total + (CO2_LIMITS[purchase.category] * purchase.amount);
+            }, 0);
+        }
+
+        function displayResults(totalCO2) {
+            document.getElementById('totalCO2').textContent = `Your total CO2 emissions are ${totalCO2.toFixed(2)} kg.`;
+            provideSustainabilityTips();
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function provideSustainabilityTips() {
+            const tips = {
+                fuel: "Consider carpooling or using an electric vehicle.",
+                groceries: "Buy locally-produced or organic groceries to reduce carbon footprint.",
+                flights: "Opt for virtual meetings or travel by train when possible.",
+                electronics: "Repair or buy refurbished electronics to reduce waste.",
+                public_transport: "Continue using public transport instead of personal vehicles."
+            };
+            
+            const tipsList = document.getElementById('tipsList');
+            tipsList.innerHTML = '';
+            purchases.forEach(purchase => {
+                const li = document.createElement('li');
+                li.textContent = tips[purchase.category];
+                tipsList.appendChild(li);
+            });
+        }
+
+        document.getElementById('trackBtn').addEventListener('click', function () {
+            const targetCO2 = parseFloat(document.getElementById('targetCO2').value);
+            const totalCO2 = calculateCarbonFootprint();
+            trackProgress(totalCO2, targetCO2);
+        });
+
+        function trackProgress(totalCO2, targetCO2) {
+            const message = document.getElementById('progressMessage');
+            if (totalCO2 > targetCO2) {
+                message.textContent = `You exceeded your target by ${(totalCO2 - targetCO2).toFixed(2)} kg. Try to reduce your emissions.`;
+            } else {
+                message.textContent = `Great job! You are ${(targetCO2 - totalCO2).toFixed(2)} kg under your target.`;
+            }
+        }
+    </script>
+</body>
+</html>
